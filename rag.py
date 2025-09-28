@@ -205,8 +205,9 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
     print(f"Indexed {doc_counter} chunks from {len(txt_files)} files into Chroma collection '{COLLECTION_NAME}' (persist dir: {PERSIST_DIR}).")
     return collection
 
-
-def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"):
+#The lines below allow you to change the model you are using. Make sure you did an ollama pull on the model so it is present
+#def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"):
+def rag_query(query: str, n_results: int = 3, model: str = "gpt-oss:latest"):
     """
     Run a RAG query:
       - embed query
