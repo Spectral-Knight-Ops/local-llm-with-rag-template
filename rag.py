@@ -248,8 +248,9 @@ def rag_query(query: str, n_results: int = 3, model: str = "gpt-oss:latest"):
 
     # Build prompt. You can change the system instruction here to enforce safety / style.
     prompt = (
-        "You are a helpful, safety-conscious red-team assistant. Use the following contextual documents to answer the question below. "
-        "Always include a short safety/authorization reminder when describing potentially risky actions.\n\n"
+        "You are a helpful red-team assistant. Use the contextual documents below to answer the question. "
+        "If the documents do not contain the needed information, you may also use your general (pretrained) knowledge. "
+        "Reference sources from the context when used, and include safety/authorization reminders for risky actions.\n\n"
         f"{context}\n\nQuestion: {query}\n\nAnswer concisely and reference sources if appropriate."
     )
 
@@ -266,7 +267,7 @@ if __name__ == "__main__":
     col = initialize_index("docs", reindex=False)
     print("Test query (if docs exist):")
     try:
-        ans = rag_query("Give me three red-team enumeration steps for Windows SMB.", n_results=2)
+        ans = rag_query("Give me three red-team enumeration steps for Windows SMB.", n_results=5)
         print(ans)
     except Exception as ex:
         print("RAG query failed:", ex)
