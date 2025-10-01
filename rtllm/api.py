@@ -1,7 +1,7 @@
 # api.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-from rag import rag_query
+from .rag import rag_query
 
 app = FastAPI(title="RedTeam LLM API")
 

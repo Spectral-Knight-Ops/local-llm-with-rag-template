@@ -1,23 +1,29 @@
-# ---- Python ----
+# ------------------------
+# Python cache/compiled files
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-*.log
-*.sqlite3
+*.so
 
+# ------------------------
 # Virtual environments
 .venv/
-env/
 venv/
+env/
 
-# ---- ChromaDB ----
+# ------------------------
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# ------------------------
+# Auto-generated/project data
+results/
 chroma_db/
 
-# ---- PyCharm / JetBrains ----
-.idea/
-*.iml
-
-# ---- OS cruft ----
+# ------------------------
+# OS junk
 .DS_Store
 Thumbs.db

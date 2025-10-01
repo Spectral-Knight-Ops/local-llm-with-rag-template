@@ -8,9 +8,7 @@ rag.py
 
 import os
 import glob
-import json
 import traceback
-import math
 from typing import List
 
 # Try to import Ollama
@@ -24,7 +22,7 @@ except Exception:
 try:
     import chromadb
 except Exception as e:
-    raise RuntimeError("Please install chromadb (`pip install chromadb`)") from e
+    raise RuntimeError("Please install chromadb (`python -m pip install chromadb`)") from e
 
 # Sentence-transformers fallback
 try:
@@ -34,12 +32,21 @@ except Exception:
     S2_AVAILABLE = False
 
 # Config
-PERSIST_DIR = "chroma_db"
 COLLECTION_NAME = "llm_docs"
 
-# Create a persistent client (new Chroma API)
-# This will create / use the folder specified by PERSIST_DIR
-client = chromadb.PersistentClient(path=PERSIST_DIR)
+# Compute a stable absolute path for the persistent Chroma DB (project root / chroma_db)
+# __file__ is rtllm/rag.py -> go up one level to project root
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PERSIST_DIR = os.path.join(PROJECT_ROOT, "chroma_db")
+
+# Make sure the folder exists (client will create it if necessary, but this makes path explicit)
+os.makedirs(PERSIST_DIR, exist_ok=True)
+
+# Create a persistent client (new Chroma API) using absolute path
+try:
+    client = chromadb.PersistentClient(path=PERSIST_DIR)
+except Exception as e:
+    raise RuntimeError(f"Failed to create Chroma PersistentClient at {PERSIST_DIR}: {e}") from e
 
 
 def get_ollama_embedding(text: str) -> List[float]:
@@ -206,8 +213,8 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
     return collection
 
 #The lines below allow you to change the model you are using. Make sure you did an ollama pull on the model so it is present
-#def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"):
-def rag_query(query: str, n_results: int = 3, model: str = "gpt-oss:latest"):
+def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"):
+#def rag_query(query: str, n_results: int = 3, model: str = "gpt-oss:latest"):
     """
     Run a RAG query:
       - embed query

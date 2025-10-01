@@ -1,8 +1,9 @@
-# Core project dependencies
-ollama
-chromadb
-sentence-transformers
-fastapi
-uvicorn
-streamlit
-requests
+#Core dependencies (Clean list)
+
+chromadb==1.1.0
+fastapi==0.117.1
+ollama==0.6.0
+requests==2.32.5
+sentence-transformers==5.1.1
+streamlit==1.50.0
+uvicorn==0.37.0
