@@ -213,6 +213,7 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
     return collection
 
 #The lines below allow you to change the model you are using. Make sure you did an ollama pull on the model so it is present
+# Replace the model placeholder (llava-llama3:latest)
 def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"):
 #def rag_query(query: str, n_results: int = 3, model: str = "gpt-oss:latest"):
     """

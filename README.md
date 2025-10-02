@@ -40,6 +40,11 @@ Usage
     # 5. In rag.py, locate the rag_query function. In the prompt declaration section, adjust this for how you intend to
         # to use the LLM. This prompt gets fed to the LLM in the backend due to RAG and helps the LLM understand what
         # exactly you want
+        # Also in rag.py, change the model to the model you want.
+        # EX: def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest") -> 
+        # def rag_query(query: str, n_results: int = 3, model: str = "<your_model>")
+        # **Make sure you installed ollama and did a pull for the desired model. If you are unsure what model you want
+        # to use, check out one of my other repos: https://github.com/Spectral-Knight-Ops/local-llm-evaluator
 
     # 6. Build database index (chroma_db should populate. This needs ran every time you add/delete files)
     cd local_llm
@@ -67,6 +72,7 @@ Future goals for project
     3. Add support for internet RAG
     4. Optimize code. Code works as is, but could use some love 
     5. Provide examples for better document tagging/import to optimize RAG
+    6. Add a RAG toggle so the model can operate normally and not refer to your docs when not needed
 
 License
     
