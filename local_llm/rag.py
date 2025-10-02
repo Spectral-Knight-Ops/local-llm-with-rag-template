@@ -35,7 +35,7 @@ except Exception:
 COLLECTION_NAME = "llm_docs"
 
 # Compute a stable absolute path for the persistent Chroma DB (project root / chroma_db)
-# __file__ is rtllm/rag.py -> go up one level to project root
+# __file__ is local_llm/rag.py -> go up one level to project root
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PERSIST_DIR = os.path.join(PROJECT_ROOT, "chroma_db")
 
@@ -169,7 +169,7 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
 
     docs = []
     ids = []
-    metadatas = []
+    metadata = []
     embeddings = []
 
     doc_counter = 0
@@ -184,7 +184,7 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
         for i, chunk in enumerate(chunks):
             docs.append(chunk)
             ids.append(f"{os.path.basename(path)}__{i}")
-            metadatas.append({"source": os.path.basename(path), "chunk_index": i})
+            metadata.append({"source": os.path.basename(path), "chunk_index": i})
             # compute embedding
             if use_ollama:
                 emb = get_ollama_embedding(chunk)
@@ -202,7 +202,7 @@ def initialize_index(docs_folder: str = "docs", reindex: bool = False, chunk_siz
         pass
 
     collection = client.create_collection(name=COLLECTION_NAME)
-    collection.add(documents=docs, embeddings=embeddings, ids=ids, metadatas=metadatas)
+    collection.add(documents=docs, embeddings=embeddings, ids=ids, metadatas=metadata)
     # persist (PersistentClient persists to path automatically; but call persist if available)
     try:
         client.persist()
@@ -254,6 +254,7 @@ def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"
         context = "\n\n---\n\n".join(context_pieces)
 
     # Build prompt. You can change the system instruction here to enforce safety / style.
+    #ADJUST THIS FOR YOUR SPECIFIC USAGE
     prompt = (
         "You are a helpful red-team assistant. Use the contextual documents below to answer the question. "
         "If the documents do not contain the needed information, you may also use your general (pretrained) knowledge. "
@@ -269,12 +270,12 @@ def rag_query(query: str, n_results: int = 3, model: str = "llava-llama3:latest"
         return f"[RAG -> Ollama error] {e}\n{traceback.format_exc()}"
 
 
-# If run directly, index docs folder and test one query
+# If run directly, index docs folder and test one query. This can be run directly to ensure pipeline is good to go
 if __name__ == "__main__":
     col = initialize_index("docs", reindex=False)
     print("Test query (if docs exist):")
     try:
-        ans = rag_query("Give me three red-team enumeration steps for Windows SMB.", n_results=5)
+        ans = rag_query("Hello, how are you doing today?", n_results=3)
         print(ans)
     except Exception as ex:
         print("RAG query failed:", ex)
