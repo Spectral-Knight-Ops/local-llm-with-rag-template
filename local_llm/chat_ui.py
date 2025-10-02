@@ -3,8 +3,8 @@ import requests
 
 API_URL = "http://127.0.0.1:8000/chat"
 
-st.set_page_config(page_title="RedTeam LLM", page_icon="🛡️")
-st.title("💬 RedTeam LLM Chat")
+st.set_page_config(page_title="My Local LLM", page_icon="🛡️")
+st.title("💬 My totally awesome local LLM API")
 
 if "history" not in st.session_state:
     st.session_state["history"] = []
